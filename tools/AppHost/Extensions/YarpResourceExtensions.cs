@@ -63,7 +63,10 @@ public static class YarpResourceExtensions
             ClusterId = target.Resource.Name,
             Destinations = new Dictionary<string, DestinationConfig>
             {
-                [target.Resource.Name] = new() { Address = $"http://{target.Resource.Name}" }
+                [target.Resource.Name] = new() { 
+                    Address = $"http://{target.Resource.Name}",
+                    Host = builder.ApplicationBuilder.ExecutionContext.IsRunMode ? "localhost" : default
+                }
             }
         };
 
@@ -175,7 +178,9 @@ internal class YarpResourceLifecycleHook(
 
         builder.Services.AddServiceDiscovery();
 
-        var proxyBuilder = builder.Services.AddReverseProxy();
+        var proxyBuilder = builder.Services
+            .AddReverseProxy()
+            .ConfigureHttpClient((context, handler) => handler.AllowAutoRedirect = true);
 
         if (yarpResource.RouteConfigs.Count > 0)
         {
